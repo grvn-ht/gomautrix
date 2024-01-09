@@ -28,6 +28,7 @@ type ReqResetPassword struct {
 	LogoutDevices bool `json:"logout_devices"`
 }
 
+
 // ResetPassword changes the password of another user using
 //
 // https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#reset-password
@@ -86,7 +87,7 @@ type RespUserInfo struct {
 	UserID       id.UserID           `json:"name"`
 	DisplayName  string              `json:"displayname"`
 	AvatarURL    id.ContentURIString `json:"avatar_url"`
-	Guest        int                 `json:"is_guest"`
+	Guest        bool                `json:"is_guest"`
 	Admin        bool                `json:"admin"`
 	Deactivated  bool                `json:"deactivated"`
 	Erased       bool                `json:"erased"`
@@ -108,4 +109,48 @@ func (cli *Client) GetUserInfo(ctx context.Context, userID id.UserID) (resp *Res
 		ResponseJSON: &resp,
 	})
 	return
+}
+
+// ReqDeleteUser is the request content to deactivate account.
+type ReqDeleteUser struct {
+	// The user to deactivate
+	UserID id.UserID `json:"-"`
+	// true if message hidden for new users in room after actual user is deactivated
+	Erase bool `json:"erase"`
+}
+
+// DeactivateAccount deactivate a specific user account.
+//
+// https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#deactivate-account
+func (cli *Client) DeactivateAccount(ctx context.Context, req ReqDeleteUser) error {
+	reqURL := cli.BuildAdminURL("v1", "deactivate", req.UserID)
+	_, err := cli.MakeFullRequest(ctx, mautrix.FullRequest{
+		Method:      http.MethodPost,
+		URL:         reqURL,
+		RequestJSON: &req,
+	})
+	return err
+}
+
+// ReqUpdateUser is the request content to reactivate an account
+type ReqActivateUser struct {
+	// The user to deactivate
+	UserID id.UserID `json:"-"`
+	// new password for user
+	Password string `json:"password"`
+	// false if we want to re-activate the user
+	Deactivated bool `json:"deactivated"`
+}
+
+// ActivateAccount re-activate a specific user account that has been deactivated.
+//
+// https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
+func (cli *Client) ActivateAccount(ctx context.Context, req ReqActivateUser) error {
+	reqURL := cli.BuildAdminURL("v2", "users", req.UserID)
+	_, err := cli.MakeFullRequest(ctx, mautrix.FullRequest{
+		Method:      http.MethodPut,
+		URL:         reqURL,
+		RequestJSON: &req,
+	})
+	return err
 }
