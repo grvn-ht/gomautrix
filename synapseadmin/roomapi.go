@@ -130,6 +130,7 @@ func (cli *Client) BlockRoom(ctx context.Context, req ReqBlockRoom) error {
 //
 // https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#get-block-status
 func (cli *Client) GetBlockRoom(ctx context.Context, RoomId string) (*mautrix.RoomsBlockResponse, error) {
+	var resp mautrix.RoomsBlockResponse
 	reqURL := cli.BuildAdminURL("v1", "rooms", RoomId, "block")
 	_, err := cli.MakeFullRequest(ctx, mautrix.FullRequest{
 		Method:       http.MethodGet,
