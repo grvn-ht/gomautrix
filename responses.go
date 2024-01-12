@@ -655,3 +655,9 @@ type RoomsMembersResponse struct {
     Members		[]string	`json:"members"`
     Total		int			`json:"total"`
 }
+
+// RoomsBlockResponse represents the response containing wether a room is blocked or not
+type RoomsBlockResponse struct {
+    Block		bool			`json:"block"`
+    UserId		string			`json:"user_id"`
+}

@@ -10,6 +10,7 @@ import (
 	"context"
 	"net/http"
 	"maunium.net/go/mautrix"
+	"maunium.net/go/mautrix/id"
 )
 
 //  Get room info based on alias
@@ -65,7 +66,7 @@ func (cli *Client) RoomMembers(ctx context.Context, RoomId string) (*mautrix.Roo
 // ReqRoomAdmin is the request content for Client.RoomAdmin.
 type ReqRoomAdmin struct {
 	// User Id to make admin
-	UserId string `json:"user_id"`
+	UserId id.UserID `json:"user_id"`
 	// Room Id or alias
 	Room string `json:"room"`
 }
@@ -112,7 +113,7 @@ type ReqBlockRoom struct {
 	Block bool `json:"block"`
 }
 
-//  Add User to Room
+//  Block or UnBlock a Room
 //
 // https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#block-room-api
 func (cli *Client) BlockRoom(ctx context.Context, req ReqBlockRoom) error {
@@ -125,3 +126,15 @@ func (cli *Client) BlockRoom(ctx context.Context, req ReqBlockRoom) error {
 	return err
 }
 
+//  Get block status of a Room
+//
+// https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#get-block-status
+func (cli *Client) GetBlockRoom(ctx context.Context, RoomId string) (*mautrix.RoomsBlockResponse, error) {
+	reqURL := cli.BuildAdminURL("v1", "rooms", RoomId, "block")
+	_, err := cli.MakeFullRequest(ctx, mautrix.FullRequest{
+		Method:       http.MethodGet,
+		URL:          reqURL,
+		ResponseJSON: &resp,
+	})
+	return &resp, err
+}
