@@ -90,7 +90,14 @@ type RespRoomMessages = mautrix.RespMessages
 // RoomMessages returns a list of messages in a room.
 //
 // https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#room-messages-api
-func (cli *Client) RoomMessages(ctx context.Context, roomID id.RoomID, from, to string, dir mautrix.Direction, filter *mautrix.FilterPart, limit int) (resp *RespRoomMessages, err error) {
+func (cli *Client) RoomMessages(
+	ctx context.Context,
+	roomID id.RoomID,
+	from, to string,
+	dir mautrix.Direction,
+	filter *mautrix.FilterPart,
+	limit int,
+) (resp *RespRoomMessages, err error) {
 	query := map[string]string{
 		"from": from,
 		"dir":  string(dir),
@@ -108,7 +115,10 @@ func (cli *Client) RoomMessages(ctx context.Context, roomID id.RoomID, from, to 
 	if limit != 0 {
 		query["limit"] = strconv.Itoa(limit)
 	}
-	urlPath := cli.BuildURLWithQuery(mautrix.SynapseAdminURLPath{"v1", "rooms", roomID, "messages"}, query)
+	urlPath := cli.BuildURLWithQuery(
+		mautrix.SynapseAdminURLPath{"v1", "rooms", roomID, "messages"},
+		query,
+	)
 	_, err = cli.MakeFullRequest(ctx, mautrix.FullRequest{
 		Method:       http.MethodGet,
 		URL:          urlPath,
@@ -134,7 +144,11 @@ type RespDeleteRoom struct {
 // This calls the async version of the endpoint, which will return immediately and delete the room in the background.
 //
 // https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#version-2-new-version
-func (cli *Client) DeleteRoom(ctx context.Context, roomID id.RoomID, req ReqDeleteRoom) (RespDeleteRoom, error) {
+func (cli *Client) DeleteRoom(
+	ctx context.Context,
+	roomID id.RoomID,
+	req ReqDeleteRoom,
+) (RespDeleteRoom, error) {
 	reqURL := cli.BuildAdminURL("v2", "rooms", roomID)
 	var resp RespDeleteRoom
 	_, err := cli.MakeFullRequest(ctx, mautrix.FullRequest{
@@ -172,7 +186,11 @@ type ReqMakeRoomAdmin struct {
 // MakeRoomAdmin promotes a user to admin in a room. This requires that a local user has permission to promote users in the room.
 //
 // https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#make-room-admin-api
-func (cli *Client) MakeRoomAdmin(ctx context.Context, roomIDOrAlias string, req ReqMakeRoomAdmin) error {
+func (cli *Client) MakeRoomAdmin(
+	ctx context.Context,
+	roomIDOrAlias string,
+	req ReqMakeRoomAdmin,
+) error {
 	reqURL := cli.BuildAdminURL("v1", "rooms", roomIDOrAlias, "make_room_admin")
 	_, err := cli.MakeFullRequest(ctx, mautrix.FullRequest{
 		Method:      http.MethodPost,
@@ -189,7 +207,11 @@ type ReqJoinUserToRoom struct {
 // JoinUserToRoom makes a local user join the given room.
 //
 // https://matrix-org.github.io/synapse/latest/admin_api/room_membership.html
-func (cli *Client) JoinUserToRoom(ctx context.Context, roomID id.RoomID, req ReqJoinUserToRoom) error {
+func (cli *Client) JoinUserToRoom(
+	ctx context.Context,
+	roomID id.RoomID,
+	req ReqJoinUserToRoom,
+) error {
 	reqURL := cli.BuildAdminURL("v1", "join", roomID)
 	_, err := cli.MakeFullRequest(ctx, mautrix.FullRequest{
 		Method:      http.MethodPost,
@@ -225,9 +247,27 @@ type RoomsBlockResponse struct {
 // GetRoomBlockStatus gets whether a room is currently blocked.
 //
 // https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#get-block-status
-func (cli *Client) GetRoomBlockStatus(ctx context.Context, roomID id.RoomID) (RoomsBlockResponse, error) {
+func (cli *Client) GetRoomBlockStatus(
+	ctx context.Context,
+	roomID id.RoomID,
+) (RoomsBlockResponse, error) {
 	var resp RoomsBlockResponse
 	reqURL := cli.BuildAdminURL("v1", "rooms", roomID, "block")
+	_, err := cli.MakeFullRequest(ctx, mautrix.FullRequest{
+		Method:       http.MethodGet,
+		URL:          reqURL,
+		ResponseJSON: &resp,
+	})
+	return resp, err
+}
+
+// ListRooms returns a list of rooms on the server.
+//
+// https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#list-room-api
+func (cli *Client) GetRoomDetails(ctx context.Context, roomID id.RoomID) (RoomInfo, error) {
+	var resp RoomInfo
+	var reqURL string
+	reqURL = cli.BuildURLWithQuery(mautrix.SynapseAdminURLPath{"v1", "rooms", roomID}, nil)
 	_, err := cli.MakeFullRequest(ctx, mautrix.FullRequest{
 		Method:       http.MethodGet,
 		URL:          reqURL,
